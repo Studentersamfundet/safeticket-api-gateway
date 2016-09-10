@@ -79,34 +79,37 @@ type STvouchercode struct {
 	STcount string `xml:" count,omitempty" json:"count,omitempty"`
 }
 
+type APIResponse struct {
+	TicketExists bool
+	OrderDetails STorder
+}
+
 const AccessKey string = "1337"
 const STUser string = "Lasse"
 const STSecret string = "b0acd427e2a99895c1dfe0c6d42b7ce071a88419cb76e271f8a18efe9e4bbf7b"
 
 func main() {
-
-	/*
-	for _, order := range o.STorder {
-		fmt.Println(order.STemail.Text)
-		fmt.Println(order.STtickets.STticket[0].STticketnumber.Text)
-	}
-	*/
-
+	// Handle HTTP requests to the defined url.
 	http.HandleFunc("/aaulan", APIRequest)
 
+	// Start the HTTP server and listen to the defined port.
 	http.ListenAndServe(":8080", nil)
 }
 
+// GetAPIResponse returns resulting XML data from the Safeticket API.
 func GetAPIResponse(APIURL string, user string, events string, t1 time.Time, t2 time.Time, secret string) *http.Response {
 	version := "1"
 	sequenceNumber := ""
 	timeFrom := t1.Format("2006-01-02")
 	timeTo := t2.Format("2006-01-02")
+
+	// Hash input data as required by Safeticket.
 	hashstring := []string{version, user, events, sequenceNumber, timeFrom, timeTo, secret}
 	hasher := sha256.New()
 	hasher.Write([]byte(strings.Join(hashstring, ":")))
 	sha := hex.EncodeToString(hasher.Sum(nil))
 
+	// Define the parameters that should be sent to the Safeticket API.
 	form := url.Values{}
 	form.Add("version", version)
 	form.Add("user", user)
@@ -116,9 +119,10 @@ func GetAPIResponse(APIURL string, user string, events string, t1 time.Time, t2 
 	form.Add("t2", timeTo)
 	form.Add("sha", sha)
 
+	// Create a new HTTP request and get the response from the Safeticket API.
 	hc := http.Client{}
 	req, err := http.NewRequest("POST", APIURL, strings.NewReader(form.Encode()))
-	//req.Header.Add("Content-Type", "application/xml; charset=utf-8")
+
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	resp, err := hc.Do(req)
 	if err != nil {
@@ -128,21 +132,55 @@ func GetAPIResponse(APIURL string, user string, events string, t1 time.Time, t2 
 	return resp
 }
 
+// APIRequest handles incoming requests and returns appropriate information as JSON.
 func APIRequest(w http.ResponseWriter, r *http.Request) {
+
+	// Check if the entered key for authentication matches the one we've set.
+	// If it does not match, return and throw an error.
 	if r.FormValue("key") != AccessKey {
 		fmt.Fprint(w, "Wrong Access Key!")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
 
-	xmlData := GetAPIResponse("https://studentersamfundet.safeticket.dk/api/orders", STUser, "23791", time.Date(2016, time.June, 01, 0, 0, 0, 0, time.UTC), time.Date(2016, time.September, 01, 0, 0, 0, 0, time.UTC), STSecret)
+	// Set correct content type and define the name of the ticketNumber url value.
+	w.Header().Set("Content-Type", "application/json")
+	ticketNumber := r.FormValue("ticketnumber")
+
+	// Get the raw XML data from the Safeticket API
+	xmlData := GetAPIResponse("https://studentersamfundet.safeticket.dk/api/orders", STUser, "25975", time.Date(2016, time.September, 06, 0, 0, 0, 0, time.UTC), time.Date(2016, time.October, 15, 0, 0, 0, 0, time.UTC), STSecret)
 	
+	// Read XML data into a byte array and unmarshal it to the structs defined above.
 	b, _ := ioutil.ReadAll(xmlData.Body)
 	var o STorders
 	xml.Unmarshal(b, &o)
-	json, err := json.Marshal(o)
+
+	// Check if an order with the entered ticketNumber exists and set orderExists and orderIndex accordingly.
+	// This only works for orders with one ticket for now, no reason to waste compute time when you can only buy one per order anyways ;)
+	var orderExists bool
+	var orderIndex int
+	for index,element := range o.STorder {
+		if element.STtickets.STticket[0].STticketnumber == ticketNumber {
+			orderIndex = index
+			orderExists = true
+		}
+	}
+
+	// Set the contents of the APIResponse struct based on whether the order exists or not.
+	// Also set an appropriate HTTP status for each case.
+	var response APIResponse
+	if orderExists == true {
+		response.TicketExists = true
+		response.OrderDetails = o.STorder[orderIndex]
+		w.WriteHeader(http.StatusOK)
+	} else {
+		response.TicketExists = false
+		response.OrderDetails = STorder{}
+		w.WriteHeader(http.StatusNotFound)
+	}
+
+	// Marshal the APIResponse defined above and write the resulting JSON to the ResponseWriter.
+	json, err := json.Marshal(response)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

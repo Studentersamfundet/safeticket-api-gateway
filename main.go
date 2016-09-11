@@ -144,7 +144,7 @@ func APIRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Set correct content type and define the name of the ticketNumber url value.
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	ticketNumber := r.FormValue("ticketnumber")
 
 	// Get the raw XML data from the Safeticket API

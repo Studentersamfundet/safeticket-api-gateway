@@ -84,7 +84,7 @@ type APIResponse struct {
 	OrderDetails STorder
 }
 
-const AccessKey string = "1337"
+const AccessToken string = "97kbjezd87chrdzr0u602abyyzbklt7ugdrb7xwg3mpjr2rbd1htd90aq3e9e1pt"
 const STUser string = "Lasse"
 const STSecret string = "b0acd427e2a99895c1dfe0c6d42b7ce071a88419cb76e271f8a18efe9e4bbf7b"
 
@@ -137,8 +137,8 @@ func APIRequest(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the entered key for authentication matches the one we've set.
 	// If it does not match, return and throw an error.
-	if r.FormValue("key") != AccessKey {
-		fmt.Fprint(w, "Wrong Access Key!")
+	if r.FormValue("access_token") != AccessToken {
+		fmt.Fprint(w, "Wrong Access Token!")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}

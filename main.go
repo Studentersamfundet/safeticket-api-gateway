@@ -138,8 +138,8 @@ func APIRequest(w http.ResponseWriter, r *http.Request) {
 	// Check if the entered key for authentication matches the one we've set.
 	// If it does not match, return and throw an error.
 	if r.FormValue("access_token") != AccessToken {
-		fmt.Fprint(w, "Wrong Access Token!")
 		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprint(w, "Wrong Access Token!")
 		return
 	}
 
@@ -175,13 +175,13 @@ func APIRequest(w http.ResponseWriter, r *http.Request) {
 	// Also set an appropriate HTTP status for each case.
 	var response APIResponse
 	if orderExists == true {
+		w.WriteHeader(http.StatusOK)
 		response.TicketExists = true
 		response.OrderDetails = o.STorder[orderIndex]
-		w.WriteHeader(http.StatusOK)
 	} else {
+		w.WriteHeader(http.StatusNotFound)
 		response.TicketExists = false
 		response.OrderDetails = STorder{}
-		w.WriteHeader(http.StatusNotFound)
 	}
 
 	// Marshal the APIResponse defined above and write the resulting JSON to the ResponseWriter.

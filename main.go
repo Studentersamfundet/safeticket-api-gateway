@@ -147,13 +147,18 @@ func APIRequest(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	ticketNumber := r.FormValue("ticketnumber")
 
-	// Get the raw XML data from the Safeticket API
-	xmlData := GetAPIResponse("https://studentersamfundet.safeticket.dk/api/orders", STUser, "25975", time.Date(2016, time.September, 06, 0, 0, 0, 0, time.UTC), time.Date(2016, time.October, 15, 0, 0, 0, 0, time.UTC), STSecret)
+	// Get the raw XML data from the Safeticket API in an array (so it supports multiple events as input)
+	apiResponses := []*http.Response{
+		GetAPIResponse("https://studentersamfundet.safeticket.dk/api/orders", STUser, "25975", time.Date(2016, time.September, 06, 0, 0, 0, 0, time.UTC), time.Date(2016, time.October, 15, 0, 0, 0, 0, time.UTC), STSecret),
+		GetAPIResponse("https://studentersamfundet.safeticket.dk/api/orders", STUser, "26422", time.Date(2016, time.September, 06, 0, 0, 0, 0, time.UTC), time.Date(2016, time.October, 15, 0, 0, 0, 0, time.UTC), STSecret),
+	}
 	
-	// Read XML data into a byte array and unmarshal it to the structs defined above.
-	b, _ := ioutil.ReadAll(xmlData.Body)
+	// Read XML data from each response into a byte array and unmarshal it to the structs defined above.
 	var o STorders
-	xml.Unmarshal(b, &o)
+	for _,response := range apiResponses {
+		b, _ := ioutil.ReadAll(response.Body)
+		xml.Unmarshal(b, &o)
+	}
 
 	// Check if an order with the entered ticketNumber exists and set orderExists and orderIndex accordingly.
 	// This only works for orders with one ticket for now, no reason to waste compute time when you can only buy one per order anyways ;)

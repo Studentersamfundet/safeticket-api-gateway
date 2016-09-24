@@ -97,7 +97,7 @@ func main() {
 }
 
 // GetAPIResponse returns resulting XML data from the Safeticket API.
-func GetAPIResponse(APIURL string, user string, events string, t1 time.Time, t2 time.Time, secret string) *http.Response {
+func GetAPIResponse(APIURL string, user string, secret string, events string, t1 time.Time, t2 time.Time) *http.Response {
 	version := "1"
 	sequenceNumber := ""
 	timeFrom := t1.Format("2006-01-02")
@@ -147,18 +147,13 @@ func APIRequest(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	ticketNumber := r.FormValue("ticketnumber")
 
-	// Get the raw XML data from the Safeticket API in an array (so it supports multiple events as input)
-	apiResponses := []*http.Response{
-		GetAPIResponse("https://studentersamfundet.safeticket.dk/api/orders", STUser, "25975", time.Date(2016, time.September, 06, 0, 0, 0, 0, time.UTC), time.Date(2016, time.October, 15, 0, 0, 0, 0, time.UTC), STSecret),
-		GetAPIResponse("https://studentersamfundet.safeticket.dk/api/orders", STUser, "26422", time.Date(2016, time.September, 06, 0, 0, 0, 0, time.UTC), time.Date(2016, time.October, 15, 0, 0, 0, 0, time.UTC), STSecret),
-	}
+	// Get the raw XML data from the Safeticket API
+	xmlData := GetAPIResponse("https://studentersamfundet.safeticket.dk/api/orders", STUser, STSecret, "25975,26422", time.Date(2016, time.September, 06, 0, 0, 0, 0, time.UTC), time.Date(2016, time.October, 15, 0, 0, 0, 0, time.UTC))
 	
-	// Read XML data from each response into a byte array and unmarshal it to the structs defined above.
+	// Read XML data from the response into a byte array and unmarshal it to the structs defined above.
 	var o STorders
-	for _,response := range apiResponses {
-		b, _ := ioutil.ReadAll(response.Body)
-		xml.Unmarshal(b, &o)
-	}
+	b, _ := ioutil.ReadAll(xmlData.Body)
+	xml.Unmarshal(b, &o)
 
 	// Check if an order with the entered ticketNumber exists and set orderExists and orderIndex accordingly.
 	// This only works for orders with one ticket for now, no reason to waste compute time when you can only buy one per order anyways ;)

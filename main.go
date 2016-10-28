@@ -84,9 +84,9 @@ type APIResponse struct {
 	OrderDetails STorder
 }
 
-const AccessToken string = "97kbjezd87chrdzr0u602abyyzbklt7ugdrb7xwg3mpjr2rbd1htd90aq3e9e1pt"
-const STUser string = "Lasse"
-const STSecret string = "b0acd427e2a99895c1dfe0c6d42b7ce071a88419cb76e271f8a18efe9e4bbf7b"
+const AccessToken string = "YOUR_ACCESS_TOKEN" // Access token for pulling data from the API Gateway, generate something secure for this
+const STUser string = "SAFETICKET_API_USER" // Safeticket API user
+const STSecret string = "SAFETICKET_API_SECRET" // Secret for the API user
 
 func main() {
 	// Handle HTTP requests to the defined url.

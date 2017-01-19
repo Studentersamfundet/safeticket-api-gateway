@@ -11,6 +11,7 @@ import (
 	"crypto/sha256"
 	"strings"
 	"encoding/hex"
+	"github.com/spf13/viper"
 )
 
 type STcustomfield struct {
@@ -84,11 +85,28 @@ type APIResponse struct {
 	OrderDetails STorder
 }
 
-const AccessToken string = "YOUR_ACCESS_TOKEN" // Access token for pulling data from the API Gateway, generate something secure for this
-const STUser string = "SAFETICKET_API_USER" // Safeticket API user
-const STSecret string = "SAFETICKET_API_SECRET" // Secret for the API user
+var AccessToken string // Access token for pulling data from the API Gateway, generate something secure for this
+var STUser string // Safeticket API user
+var STSecret string // Secret for the API user
+var EventID string
+var EventDateFrom time.Time
+var EventDateTo time.Time
 
 func main() {
+	viper.SetConfigName("config")
+	viper.AddConfigPath(".")
+	err := viper.ReadInConfig()
+	if err != nil {
+		panic(fmt.Errorf("Fatal error config file: %s \n", err))
+	}
+
+	AccessToken = viper.GetString("access.accesstoken")
+	STUser = viper.GetString("access.safeticket_user")
+	STSecret = viper.GetString("access.safeticket_secret")
+	EventID = viper.GetString("event.id")
+	EventDateFrom = viper.GetTime("event.date_from")
+	EventDateTo = viper.GetTime("event.date_to")
+
 	// Handle HTTP requests to the defined url.
 	http.HandleFunc("/aaulan", APIRequest)
 
@@ -148,7 +166,7 @@ func APIRequest(w http.ResponseWriter, r *http.Request) {
 	ticketNumber := r.FormValue("ticketnumber")
 
 	// Get the raw XML data from the Safeticket API
-	xmlData := GetAPIResponse("https://studentersamfundet.safeticket.dk/api/orders", STUser, STSecret, "25975,26422", time.Date(2016, time.September, 06, 0, 0, 0, 0, time.UTC), time.Date(2016, time.October, 15, 0, 0, 0, 0, time.UTC))
+	xmlData := GetAPIResponse("https://studentersamfundet.safeticket.dk/api/orders", STUser, STSecret, EventID, EventDateFrom, EventDateTo)
 	
 	// Read XML data from the response into a byte array and unmarshal it to the structs defined above.
 	var o STorders

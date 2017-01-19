@@ -1,0 +1,9 @@
+[access]
+accesstoken = ""
+safeticket_user = ""
+safeticket_secret = ""
+
+[event]
+id = ""
+date_from = ""
+date_to = ""

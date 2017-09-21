@@ -11,7 +11,7 @@ import (
 	"crypto/sha256"
 	"strings"
 	"encoding/hex"
-	"github.com/spf13/viper"
+	"flag"
 )
 
 type STcustomfield struct {
@@ -93,19 +93,24 @@ var EventDateFrom time.Time
 var EventDateTo time.Time
 
 func main() {
-	viper.SetConfigName("config")
-	viper.AddConfigPath(".")
-	err := viper.ReadInConfig()
-	if err != nil {
-		panic(fmt.Errorf("Fatal error config file: %s \n", err))
-	}
+	flag.StringVar(&AccessToken, "accesstoken", "", "The Access Token")
+	flag.StringVar(&STUser, "stuser", "", "The User")
+	flag.StringVar(&STSecret, "stsecret", "", "The Secret")
+	flag.StringVar(&EventID, "eventid", "", "The Event ID")
+	DateFromPtr := flag.String("eventdatefrom", "", "The Event From Date")
+	DateToPtr := flag.String("eventdateto", "", "The Event To Date")
 
-	AccessToken = viper.GetString("access.accesstoken")
-	STUser = viper.GetString("access.safeticket_user")
-	STSecret = viper.GetString("access.safeticket_secret")
-	EventID = viper.GetString("event.id")
-	EventDateFrom = viper.GetTime("event.date_from")
-	EventDateTo = viper.GetTime("event.date_to")
+	flag.Parse()
+
+	tFrom, errFrom := time.Parse("2006-01-02", *DateFromPtr)
+	tTo, errTo := time.Parse("2006-01-02", *DateToPtr)
+
+	EventDateFrom = tFrom
+	EventDateTo = tTo
+
+	if errFrom != nil || errTo != nil {
+		panic("Some of the environment variables were empty, or the dates failed to parse")
+	}
 
 	// Handle HTTP requests to the defined url.
 	http.HandleFunc("/aaulan", APIRequest)

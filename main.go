@@ -1,21 +1,21 @@
 package main
 
 import (
-	"fmt"
-	"encoding/xml"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
+	"encoding/xml"
+	"flag"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"time"
-	"crypto/sha256"
 	"strings"
-	"encoding/hex"
-	"flag"
+	"time"
 )
 
 type STcustomfield struct {
-	STname string `xml:" name,omitempty" json:"name,omitempty"`
+	STname  string `xml:" name,omitempty" json:"name,omitempty"`
 	STvalue string `xml:" value,omitempty" json:"value,omitempty"`
 }
 
@@ -24,28 +24,28 @@ type STcustomfields struct {
 }
 
 type STorder struct {
-	STaddress string `xml:" address,omitempty" json:"address,omitempty"`
-	STaddress2 string `xml:" address2,omitempty" json:"address2,omitempty"`
-	STcardfee string `xml:" cardfee,omitempty" json:"cardfee,omitempty"`
-	STcity string `xml:" city,omitempty" json:"city,omitempty"`
-	STcountry string `xml:" country,omitempty" json:"country,omitempty"`
-	STcustomfields *STcustomfields `xml:" customfields,omitempty" json:"customfields,omitempty"`
-	STemail string `xml:" email,omitempty" json:"email,omitempty"`
-	STevent string `xml:" event,omitempty" json:"event,omitempty"`
-	STmailshipping string `xml:" mailshipping,omitempty" json:"mailshipping,omitempty"`
-	STname string `xml:" name,omitempty" json:"name,omitempty"`
-	STnewsletter string `xml:" newsletter,omitempty" json:"newsletter,omitempty"`
-	STorderid string `xml:" orderid,omitempty" json:"orderid,omitempty"`
-	STpaymentsequencenumber string `xml:" paymentsequencenumber,omitempty" json:"paymentsequencenumber,omitempty"`
-	STshippingfee string `xml:" shippingfee,omitempty" json:"shippingfee,omitempty"`
-	STstatus string `xml:" status,omitempty" json:"status,omitempty"`
-	STtelephone string `xml:" telephone,omitempty" json:"telephone,omitempty"`
-	STtickets *STtickets `xml:" tickets,omitempty" json:"tickets,omitempty"`
-	STtime string `xml:" time,omitempty" json:"time,omitempty"`
-	STtotal string `xml:" total,omitempty" json:"total,omitempty"`
-	STvatamount string `xml:" vatamount,omitempty" json:"vatamount,omitempty"`
-	STvouchercode *STvouchercode `xml:" vouchercode,omitempty" json:"vouchercode,omitempty"`
-	STzip string `xml:" zip,omitempty" json:"zip,omitempty"`
+	STaddress               string          `xml:" address,omitempty" json:"address,omitempty"`
+	STaddress2              string          `xml:" address2,omitempty" json:"address2,omitempty"`
+	STcardfee               string          `xml:" cardfee,omitempty" json:"cardfee,omitempty"`
+	STcity                  string          `xml:" city,omitempty" json:"city,omitempty"`
+	STcountry               string          `xml:" country,omitempty" json:"country,omitempty"`
+	STcustomfields          *STcustomfields `xml:" customfields,omitempty" json:"customfields,omitempty"`
+	STemail                 string          `xml:" email,omitempty" json:"email,omitempty"`
+	STevent                 string          `xml:" event,omitempty" json:"event,omitempty"`
+	STmailshipping          string          `xml:" mailshipping,omitempty" json:"mailshipping,omitempty"`
+	STname                  string          `xml:" name,omitempty" json:"name,omitempty"`
+	STnewsletter            string          `xml:" newsletter,omitempty" json:"newsletter,omitempty"`
+	STorderid               string          `xml:" orderid,omitempty" json:"orderid,omitempty"`
+	STpaymentsequencenumber string          `xml:" paymentsequencenumber,omitempty" json:"paymentsequencenumber,omitempty"`
+	STshippingfee           string          `xml:" shippingfee,omitempty" json:"shippingfee,omitempty"`
+	STstatus                string          `xml:" status,omitempty" json:"status,omitempty"`
+	STtelephone             string          `xml:" telephone,omitempty" json:"telephone,omitempty"`
+	STtickets               *STtickets      `xml:" tickets,omitempty" json:"tickets,omitempty"`
+	STtime                  string          `xml:" time,omitempty" json:"time,omitempty"`
+	STtotal                 string          `xml:" total,omitempty" json:"total,omitempty"`
+	STvatamount             string          `xml:" vatamount,omitempty" json:"vatamount,omitempty"`
+	STvouchercode           *STvouchercode  `xml:" vouchercode,omitempty" json:"vouchercode,omitempty"`
+	STzip                   string          `xml:" zip,omitempty" json:"zip,omitempty"`
 }
 
 type STorders struct {
@@ -57,18 +57,18 @@ type STroot struct {
 }
 
 type STseat struct {
-	STrow string `xml:" row,omitempty" json:"row,omitempty"`
+	STrow  string `xml:" row,omitempty" json:"row,omitempty"`
 	STseat string `xml:" seat,omitempty" json:"seat,omitempty"`
 }
 
 type STticket struct {
-	STarrived string `xml:" arrived,omitempty" json:"arrived,omitempty"`
+	STarrived      string          `xml:" arrived,omitempty" json:"arrived,omitempty"`
 	STcustomfields *STcustomfields `xml:" customfields,omitempty" json:"customfields,omitempty"`
-	STprice string `xml:" price,omitempty" json:"price,omitempty"`
-	STseat *STseat `xml:" seat,omitempty" json:"seat,omitempty"`
-	STticketfee string `xml:" ticketfee,omitempty" json:"ticketfee,omitempty"`
-	STticketid string `xml:" ticketid,omitempty" json:"ticketid,omitempty"`
-	STticketnumber string `xml:" ticketnumber,omitempty" json:"ticketnumber,omitempty"`
+	STprice        string          `xml:" price,omitempty" json:"price,omitempty"`
+	STseat         *STseat         `xml:" seat,omitempty" json:"seat,omitempty"`
+	STticketfee    string          `xml:" ticketfee,omitempty" json:"ticketfee,omitempty"`
+	STticketid     string          `xml:" ticketid,omitempty" json:"ticketid,omitempty"`
+	STticketnumber string          `xml:" ticketnumber,omitempty" json:"ticketnumber,omitempty"`
 }
 
 type STtickets struct {
@@ -76,18 +76,18 @@ type STtickets struct {
 }
 
 type STvouchercode struct {
-	STcode string `xml:" code,omitempty" json:"code,omitempty"`
+	STcode  string `xml:" code,omitempty" json:"code,omitempty"`
 	STcount string `xml:" count,omitempty" json:"count,omitempty"`
 }
 
 type APIResponse struct {
 	TicketExists bool
-	OrderDetails STorder
+	OrderDetails STorder `json:"omitempty"`
 }
 
 var AccessToken string // Access token for pulling data from the API Gateway, generate something secure for this
-var STUser string // Safeticket API user
-var STSecret string // Secret for the API user
+var STUser string      // Safeticket API user
+var STSecret string    // Secret for the API user
 var EventID string
 var EventDateFrom time.Time
 var EventDateTo time.Time
@@ -172,7 +172,7 @@ func APIRequest(w http.ResponseWriter, r *http.Request) {
 
 	// Get the raw XML data from the Safeticket API
 	xmlData := GetAPIResponse("https://studentersamfundet.safeticket.dk/api/orders", STUser, STSecret, EventID, EventDateFrom, EventDateTo)
-	
+
 	// Read XML data from the response into a byte array and unmarshal it to the structs defined above.
 	var o STorders
 	b, _ := ioutil.ReadAll(xmlData.Body)
@@ -182,7 +182,7 @@ func APIRequest(w http.ResponseWriter, r *http.Request) {
 	// This only works for orders with one ticket for now, no reason to waste compute time when you can only buy one per order anyways ;)
 	var orderExists bool
 	var orderIndex int
-	for index,element := range o.STorder {
+	for index, element := range o.STorder {
 		if element.STtickets.STticket[0].STticketnumber == ticketNumber {
 			orderIndex = index
 			orderExists = true
